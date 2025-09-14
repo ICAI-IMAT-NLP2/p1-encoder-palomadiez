@@ -224,9 +224,9 @@ class Embeddings(nn.Module):
 
     def __init__(self, vocab_size: int, max_position_embeddings: int, d_model: int):
         super(Embeddings, self).__init__()
-        self.token_embeddings = nn.Embedding()
-        self.position_embeddings = nn.Embedding()
-        self.layer_norm = nn.LayerNorm()
+        self.token_embeddings = nn.Embedding(vocab_size, d_model)
+        self.position_embeddings = nn.Embedding(max_position_embeddings, d_model)
+        self.layer_norm = nn.LayerNorm(d_model)
 
     def forward(self, input_ids: torch.Tensor) -> torch.Tensor:
         """Forward pass to combine token and positional embeddings.
@@ -238,15 +238,16 @@ class Embeddings(nn.Module):
             torch.Tensor: The combined and normalized embeddings of shape (batch_size, seq_len, d_model).
         """
         # Generate position IDs based on the input sequence length
-        seq_length = None
-        position_ids = None
+        batch_size, seq_length = input_ids.shape
+        position_ids = torch.arange(seq_length).unsqueeze(0).expand(batch_size, seq_length)
 
         # Create token and position embeddings
-        token_embeddings = None
-        position_embeddings = None
+        token_embeddings = self.token_embeddings(input_ids)
+        position_embeddings = self.position_embeddings(position_ids)
 
         # Combine token and position embeddings
-        embeddings = None
+        embeddings = token_embeddings+position_embeddings
+        embeddings = self.layer_norm(embeddings)
 
         return embeddings
     
