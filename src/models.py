@@ -95,7 +95,8 @@ class MultiHeadAttention(nn.Module):
 
     def __init__(self, d_model: int, num_attention_heads: int):
         super(MultiHeadAttention, self).__init__()
-        d_k, d_q, d_v = int(d_model/num_attention_heads), int(d_model/num_attention_heads), int(d_model/num_attention_heads)
+             
+        d_k = d_q = d_v = d_model//num_attention_heads
         self.heads = nn.ModuleList([AttentionHead(d_model, d_k, d_q, d_v) for i in range(num_attention_heads)])
         self.output_linear = nn.Linear(num_attention_heads*d_v, d_model)
 
@@ -108,6 +109,11 @@ class MultiHeadAttention(nn.Module):
         Returns:
             Tensor: Output tensor of shape (batch_size, seq_len, d_model).
         """
+        _, _, d_model = hidden_state.shape
+        num_attention_heads = len(list(self.heads))
+
+        if d_model % num_attention_heads != 0:
+            raise RuntimeError(f"{d_model} must be divisible by {num_attention_heads}")
         
         x_list = []
         for i, layer in enumerate(self.heads):
@@ -135,8 +141,8 @@ class FeedForward(nn.Module):
 
     def __init__(self, d_model: int, intermediate_size: int):
         super(FeedForward, self).__init__()
-        self.linear_1 = nn.Linear(d_model)
-        self.linear_2 = nn.Linear(intermediate_size)
+        self.linear_1 = nn.Linear(d_model, intermediate_size)
+        self.linear_2 = nn.Linear(intermediate_size, d_model)
         self.gelu = nn.GELU()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -148,8 +154,11 @@ class FeedForward(nn.Module):
         Returns:
             torch.Tensor: Output tensor of shape (batch_size, seq_len, d_model).
         """
-        x = None
-        return x
+        y1 = self.linear_1(x)
+        ygelu = self.gelu(y1)
+        output = self.linear_2(ygelu)
+
+        return output
 
 class TransformerEncoderLayer(nn.Module):
     """Transformer Encoder Layer.
