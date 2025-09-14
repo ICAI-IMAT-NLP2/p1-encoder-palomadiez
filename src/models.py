@@ -323,7 +323,8 @@ class ClassificationHead(nn.Module):
         Returns:
             torch.Tensor: Output tensor of shape (batch_size, num_classes).
         """
-        x = None
+        drop = self.dropout(x)
+        x = self.linear(drop)
         return x
     
 class TransformerForSequenceClassification(nn.Module):
