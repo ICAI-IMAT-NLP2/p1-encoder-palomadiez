@@ -366,11 +366,13 @@ class TransformerForSequenceClassification(nn.Module):
             torch.Tensor: Output tensor of shape (batch_size, num_classes).
         """
         # Get the hidden states from the Transformer encoder
-        x = None
+
+        hidden_states = self.transformer_encoder(input_ids)
 
         # Use the first token's output (e.g., CLS token) for classification
-        x = None
+        x = hidden_states[:,0,:]
         
         # Pass through the classification head
-        x = None
-        return x
+        output = self.classifier(x)
+        
+        return output
