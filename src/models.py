@@ -275,7 +275,7 @@ class TransformerEncoder(nn.Module):
                  ):
         super(TransformerEncoder, self).__init__()
         self.embeddings = Embeddings(vocab_size, max_position_embeddings, d_model)
-        self.layers = nn.ModuleList()
+        self.layers = nn.ModuleList([TransformerEncoderLayer(d_model, num_attention_heads, intermediate_size) for i in range(num_hidden_layers)])
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through the Transformer encoder.
@@ -286,8 +286,12 @@ class TransformerEncoder(nn.Module):
         Returns:
             torch.Tensor: Output tensor of shape (batch_size, seq_len, d_model).
         """
-        x = None
-        return x
+        embeddings = self.embeddings(x)
+        
+        for i, layer in enumerate(self.layers):
+            embeddings = layer(embeddings)
+
+        return embeddings
     
 class ClassificationHead(nn.Module):
     """Classification head for the Transformer model.
