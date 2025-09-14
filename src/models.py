@@ -181,8 +181,8 @@ class TransformerEncoderLayer(nn.Module):
 
     def __init__(self, d_model: int, num_attention_heads: int, intermediate_size: int):
         super(TransformerEncoderLayer, self).__init__()
-        self.layer_norm_1 = nn.LayerNorm()
-        self.layer_norm_2 = nn.LayerNorm()
+        self.layer_norm_1 = nn.LayerNorm(d_model)
+        self.layer_norm_2 = nn.LayerNorm(d_model)
         self.attention = MultiHeadAttention(d_model, num_attention_heads)
         self.feed_forward = FeedForward(d_model, intermediate_size)
 
@@ -196,12 +196,14 @@ class TransformerEncoderLayer(nn.Module):
             torch.Tensor: Output tensor of shape (batch_size, seq_len, d_model).
         """
         # Apply layer normalization and then apply multi-head attention
-        hidden_state = None
+        hidden_state = self.layer_norm_1(x)
+        attention = self.attention(hidden_state)
         
         # Apply layer normalization and then apply feed-forward network
-        x = None
+        hidden_state_2 = self.layer_norm_2(attention)
+        output = self.feed_forward(hidden_state_2)
         
-        return x
+        return output
 
 class Embeddings(nn.Module):
     """Embeddings module for the Transformer.
