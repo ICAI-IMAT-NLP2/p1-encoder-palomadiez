@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
-
 class AttentionHead(nn.Module):
     """Single Attention Head.
 
